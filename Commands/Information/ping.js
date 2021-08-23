@@ -14,7 +14,6 @@ module.exports = {
         const embed = new MessageEmbed()
             .setDescription(`🏓 Пинг бота: **${ client.ws.ping } мс**\n<:cpu:861537122766028871> Использование памяти: **${ (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2) } МБ**`)
             .setColor(client.color(interaction.guild))
-            .setTimestamp()
 
         interaction.followUp({ embeds: [ embed ] });
 

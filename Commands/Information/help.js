@@ -13,7 +13,8 @@ module.exports = {
     run: async(client, interaction, args) => {
 
         const categoryNames = {
-            Info: "ℹ Информационные команды",
+            Information: "ℹ Информационные команды",
+            Config: "⚙ Настройки"
         }
 
         let categories = [];

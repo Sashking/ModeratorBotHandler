@@ -1,0 +1,84 @@
+const { CommandInteraction, Client, MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+const guildSettingsSchema = require('../../models/guildSettings');
+
+module.exports = {
+    name: 'settings',
+    description: "Настройте параметры этого сервера.",
+
+    /**
+     * @param {Client} client 
+     * @param {CommandInteraction} interaction
+     * @param {String[]} args 
+     */
+    run: async(client, interaction, args) => {
+
+        guildSettingsSchema.findOne({ GuildID: interaction.guild.id }, async (err, data) => {
+            if (!data) {
+                data = new guildSettingsSchema({
+                    GuildID: interaction.guild.id,
+                    AuditChannelID: "",
+                    LinkProtection: false
+                })
+                data.save();
+            }
+
+            const linkProtectionTurnOnButton = new MessageButton()
+                .setCustomId('turnOnLinkProtection')
+                .setLabel('Защита от ссылок')
+                .setStyle('DANGER')
+            
+            const linkProtectionTurnOffButton = new MessageButton()
+                .setCustomId('turnOffLinkProtection')
+                .setLabel('Защита от ссылок')
+                .setStyle('SUCCESS')
+
+            async function generateMessage() {
+                const auditChannel = interaction.guild.channels.cache.get(data.AuditChannelID) || "Отсутствует";
+                const linkProtection = data.LinkProtection ? "Вкл." : "Выкл.";
+
+                const embed = new MessageEmbed()
+                    .addField("Канал аудита", `\` ${ auditChannel } \``)
+                    .addField("Защита от ссылок", `\` ${ linkProtection } \``)
+                    .setColor(client.color(interaction.guild))
+
+                const linkButton = linkProtection ? linkProtectionTurnOnButton : linkProtectionTurnOffButton
+                const row = new MessageActionRow()
+                    .addComponents(linkButton)
+
+                const message = {
+                    embeds: [ embed ],
+                    components: [ row ]
+                }
+
+                return message;
+            }
+
+
+            let msg = await generateMessage()
+            interaction.followUp(msg);
+
+            const filter = c => c.customId === 'turnOnLinkProtection' && c.member.permissions.has('ADMINISTRATOR') || c.customId === 'turnOffLinkProtection' && c.member.permissions.has('ADMINISTRATOR');
+            const collector = interaction.channel.createMessageComponentCollector({ filter });
+
+            collector.on('collect', async collected => {
+                console.log(collected.customId);
+                if (!collected.isButton()) return;
+                if (collected.customId == 'turnOnLinkProtection') {
+                    data.LinkProtection = false;
+                    data.save().then(async () => {
+                        let m = await generateMessage();
+                        await collected.update(m)
+                    })
+                } else {
+                    data.LinkProtection = true;
+                    data.save().then(async () => {
+                        let m = await generateMessage();
+                        await collected.update(m)
+                    })
+                }
+            })
+
+        });
+
+    }
+}
