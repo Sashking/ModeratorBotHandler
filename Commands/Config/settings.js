@@ -22,15 +22,10 @@ module.exports = {
                 data.save();
             }
 
-            const linkProtectionTurnOnButton = new MessageButton()
-                .setCustomId('turnOnLinkProtection')
+            const linkProtectionButton = new MessageButton()
+                .setCustomId('linkProtection')
                 .setLabel('Защита от ссылок')
-                .setStyle('DANGER')
-            
-            const linkProtectionTurnOffButton = new MessageButton()
-                .setCustomId('turnOffLinkProtection')
-                .setLabel('Защита от ссылок')
-                .setStyle('SUCCESS')
+                .setStyle('PRIMARY')
 
             async function generateMessage() {
                 const auditChannel = interaction.guild.channels.cache.get(data.AuditChannelID) || "Отсутствует";
@@ -41,9 +36,8 @@ module.exports = {
                     .addField("Защита от ссылок", `\` ${ linkProtection } \``)
                     .setColor(client.color(interaction.guild))
 
-                const linkButton = linkProtection ? linkProtectionTurnOnButton : linkProtectionTurnOffButton
                 const row = new MessageActionRow()
-                    .addComponents(linkButton)
+                    .addComponents(linkProtectionButton)
 
                 const message = {
                     embeds: [ embed ],
@@ -57,20 +51,14 @@ module.exports = {
             let msg = await generateMessage()
             interaction.followUp(msg);
 
-            const filter = c => c.customId === 'turnOnLinkProtection' && c.member.permissions.has('ADMINISTRATOR') || c.customId === 'turnOffLinkProtection' && c.member.permissions.has('ADMINISTRATOR');
+            const filter = c => c.customId === 'linkProtection' && c.member.id === interaction.user.id;
             const collector = interaction.channel.createMessageComponentCollector({ filter });
 
             collector.on('collect', async collected => {
                 console.log(collected.customId);
                 if (!collected.isButton()) return;
-                if (collected.customId == 'turnOnLinkProtection') {
-                    data.LinkProtection = false;
-                    data.save().then(async () => {
-                        let m = await generateMessage();
-                        await collected.update(m)
-                    })
-                } else {
-                    data.LinkProtection = true;
+                if (collected.customId == 'linkProtection') {
+                    data.LinkProtection = !data.LinkProtection;
                     data.save().then(async () => {
                         let m = await generateMessage();
                         await collected.update(m)
