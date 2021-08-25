@@ -55,7 +55,6 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ filter });
 
             collector.on('collect', async collected => {
-                console.log(collected.customId);
                 if (!collected.isButton()) return;
                 if (collected.customId == 'linkProtection') {
                     data.LinkProtection = !data.LinkProtection;
