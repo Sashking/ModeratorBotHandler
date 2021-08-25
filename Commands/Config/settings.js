@@ -4,6 +4,7 @@ const guildSettingsSchema = require('../../models/guildSettings');
 module.exports = {
     name: 'settings',
     description: "Настройте параметры этого сервера.",
+    userPermissions: ['ADMINISTRATOR'],
 
     /**
      * @param {Client} client 

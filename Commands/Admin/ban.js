@@ -17,6 +17,7 @@ module.exports = {
             required: false,
         },
     ],
+    userPermissions: ['BAN_MEMBERS'],
 
     /**
      * @param {Client} client 
@@ -25,16 +26,9 @@ module.exports = {
      */
     run: async(client, interaction, args) => {
 
-        const userMissingPermissionsEmbed = new MessageEmbed()
-            .setDescription('У вас не хватает прав.')
-            .setColor(client.color(interaction.guild))
-
         const botMissingPermissionsEmbed = new MessageEmbed()
             .setDescription('У меня не хватает прав, чтобы забанить этого участника!')
             .setColor(client.color(interaction.guild))
-        
-        if (!interaction.member.permissions.has('BAN_MEMBERS'))
-            return interaction.followUp({ embeds: [ userMissingPermissionsEmbed ] });
         
         let [ target, reason ] = args;
         const targetMember = interaction.guild.members.cache.get(target);
