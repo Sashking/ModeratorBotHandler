@@ -17,7 +17,6 @@ module.exports = {
             if (!data) {
                 data = new guildSettingsSchema({
                     GuildID: interaction.guild.id,
-                    AuditChannelID: "",
                     LinkProtection: false
                 })
                 data.save();
@@ -61,7 +60,7 @@ module.exports = {
                     data.LinkProtection = !data.LinkProtection;
                     data.save().then(async () => {
                         let m = await generateMessage();
-                        await collected.update(m)
+                        await collected.update(m);
                     })
                 }
             })
