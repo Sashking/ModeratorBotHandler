@@ -36,13 +36,21 @@ module.exports = {
         if (!interaction.member.permissions.has('BAN_MEMBERS'))
             return interaction.followUp({ embeds: [ userMissingPermissionsEmbed ] });
         
-        const [ target, reason ] = args;
+        let [ target, reason ] = args;
         const targetMember = interaction.guild.members.cache.get(target);
+        reason = reason || "Причина не указана.";
 
         if (!targetMember || !targetMember.kickable)
             return interaction.followUp({ embeds: [ botMissingPermissionsEmbed ] });
 
-        await interaction.guild.members.kick(targetMember.user, reason || "Причина не указана.");
+        const targetEmbed = new MessageEmbed()
+            .setAuthor(`Вас кикнули с сервера ${interaction.guild.name}`, interaction.guild.iconURL({ dynamic: true }))
+            .addField('Причина', reason)
+            .addField('Кикнул', `${interaction.user}`)
+            .setColor(client.color(interaction.guild))
+
+        await targetMember.user.send({ embeds: [ targetEmbed ] }).catch(() => {});
+        await interaction.guild.members.kick(targetMember.user, reason);
 
         const embed = new MessageEmbed()
             .setDescription(`${targetMember} успешно кикнут!`)
