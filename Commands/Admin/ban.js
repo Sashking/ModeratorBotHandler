@@ -36,13 +36,21 @@ module.exports = {
         if (!interaction.member.permissions.has('BAN_MEMBERS'))
             return interaction.followUp({ embeds: [ userMissingPermissionsEmbed ] });
         
-        const [ target, reason ] = args;
+        let [ target, reason ] = args;
         const targetMember = interaction.guild.members.cache.get(target);
+        reason = reason || "Причина не указана.";
 
         if (!targetMember || !targetMember.bannable)
             return interaction.followUp({ embeds: [ botMissingPermissionsEmbed ] });
 
-        await interaction.guild.members.ban(targetMember.user, { reason: reason || "Причина не указана." });
+        const targetEmbed = new MessageEmbed()
+            .setAuthor(`Вас забанили на сервере ${interaction.guild.name}`, interaction.guild.iconURL({ dynamic: true }))
+            .addField('Причина', reason)
+            .addField('Забанил', `${interaction.user}`)
+            .setColor(client.color(interaction.guild))
+
+        await targetMember.user.send({ embeds: [ targetEmbed ] }).catch(() => {});
+        await interaction.guild.members.ban(targetMember.user, { reason: reason });
 
         const embed = new MessageEmbed()
             .setDescription(`${targetMember} успешно забанен!`)
