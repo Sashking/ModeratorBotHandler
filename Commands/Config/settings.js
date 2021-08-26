@@ -54,13 +54,14 @@ module.exports = {
             const collector = interaction.channel.createMessageComponentCollector({ filter });
 
             collector.on('collect', async collected => {
-                if (!collected.isButton()) return;
-                if (collected.customId == 'linkProtection') {
-                    data.LinkProtection = !data.LinkProtection;
-                    data.save().then(async () => {
-                        let m = await generateMessage();
-                        await collected.update(m);
-                    })
+                if (collected.isButton()) {
+                    if (collected.customId == 'linkProtection') {
+                        data.LinkProtection = !data.LinkProtection;
+                        data.save().then(async () => {
+                            let m = await generateMessage();
+                            await collected.update(m);
+                        })
+                    }
                 }
             })
 
