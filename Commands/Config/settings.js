@@ -17,7 +17,8 @@ module.exports = {
             if (!data) {
                 data = new guildSettingsSchema({
                     GuildID: interaction.guild.id,
-                    LinkProtection: false
+                    LinkProtection: false,
+                    MuteRoleID: "",
                 })
                 data.save();
             }
@@ -28,11 +29,9 @@ module.exports = {
                 .setStyle('PRIMARY')
 
             async function generateMessage() {
-                const auditChannel = interaction.guild.channels.cache.get(data.AuditChannelID) || "` Отсутствует `";
                 const linkProtection = data.LinkProtection ? "Вкл." : "Выкл.";
 
                 const embed = new MessageEmbed()
-                    .addField("Канал аудита", `${ auditChannel }`)
                     .addField("Защита от ссылок", `\` ${ linkProtection } \``)
                     .setColor(client.color(interaction.guild))
 

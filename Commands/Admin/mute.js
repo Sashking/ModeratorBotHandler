@@ -35,61 +35,80 @@ module.exports = {
         const targetMember = interaction.guild.members.cache.get(target);
         reason = reason || "Причина не указана.";
 
-        let muteRole;
+        function createMuteRole() {
+            const muteRole = interaction.guild.roles.create({ 
+                name: 'Замучен',
+                color: '#9c3b3b',
+                mentionable: false,
+                position: interaction.guild.me.roles.highest - 1,
+            });
+
+            return muteRole;
+        }
+
+        let muteRoleID;
         guildSettingsSchema.findOne({ GuildID: interaction.guild.id }, (err, data) => {
+
             if (data) {
                 if (data.MuteRoleID) {
-                    muteRole = data.MuteRoleID;
+                    if (!interaction.guild.roles.cache.get(data.MuteRoleID)) {
+                        createMuteRole()
+                            .then((r) => {
+                                data.MuteRoleID = r.id;
+                                data.save();
+                            })
+                    } else muteRoleID = data.MuteRoleID;
                 } else {
-                    interaction.guild.roles.create(
-                        { 
-                            name: 'Замучен',
-                            color: '#9c3b3b',
-                            mentionable: false,
-                            position: interaction.guild.me.roles.highest - 1,
-                        }).then((role) => {
-                            data.MuteRoleID = muteRole.id;
-                            muteRole = role;
+                    muteRoleID = createMuteRole()
+                        .then((r) => {
+                            data.MuteRoleID = r.id;
                             data.save();
                         })
                 }
             } else {
-                interaction.guild.roles.create(
-                    { 
-                        name: 'Замучен',
-                        color: '#9c3b3b',
-                        mentionable: false,
-                        position: interaction.guild.me.roles.highest - 1,
-                    }).then((role) => {
-                        console.log(role);
-                        muteRole = role;
-
+                muteRoleID = createMuteRole()
+                    .then((r) => {
                         new guildSettingsSchema({
                             GuildID: interaction.guild.id,
                             LinkProtection: false,
-                            MuteRoleID: muteRole.id
+                            MuteRoleID: r.id
                         }).save();
                     })
             }
-        });
 
-        if (!targetMember || targetMember.roles.highest.position >= interaction.guild.me.roles.highest.position)
-            return interaction.followUp({ embeds: [ botMissingPermissionsEmbed ] });
+        }).then(async (x) => {
 
-        const targetEmbed = new MessageEmbed()
-            .setAuthor(`Вас замутили на сервере ${interaction.guild.name}`, interaction.guild.iconURL({ dynamic: true }))
-            .addField('Причина', reason)
-            .addField('Замутил', `${interaction.user}`)
-            .setColor(client.color(interaction.guild))
+            interaction.guild.channels.cache.forEach((c) => {
+                c.permissionOverwrites.edit(
+                    interaction.guild.roles.cache.get(muteRoleID),
+                    {
+                        SEND_MESSAGES: false,
+                        ADD_REACTIONS: false,
+                    }
+                )
+            })
 
-        await targetMember.user.send({ embeds: [ targetEmbed ] }).catch(() => {});
-        await targetMember.roles.add(muteRole.id);
+            if (!targetMember || targetMember.roles.highest.position >= interaction.guild.me.roles.highest.position)
+                return interaction.followUp({ embeds: [ botMissingPermissionsEmbed ] });
 
-        const embed = new MessageEmbed()
-            .setDescription(`${targetMember} успешно замучен!`)
-            .setColor(client.color(interaction.guild))
+            const targetEmbed = new MessageEmbed()
+                .setAuthor(`Вас замутили на сервере ${interaction.guild.name}`, interaction.guild.iconURL({ dynamic: true }))
+                .addField('Причина', reason)
+                .addField('Замутил', `${interaction.user}`)
+                .setColor(client.color(interaction.guild))
 
-        interaction.followUp({ embeds: [ embed ] });
+            const role = interaction.guild.roles.cache.get(muteRoleID);
+
+            await targetMember.user.send({ embeds: [ targetEmbed ] }).catch(() => {});
+            await targetMember.roles.add(role);
+
+            const embed = new MessageEmbed()
+                .setDescription(`${targetMember} успешно замучен!`)
+                .setColor(client.color(interaction.guild))
+
+            interaction.followUp({ embeds: [ embed ] });
+
+        })
 
     }
 }
