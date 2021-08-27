@@ -20,7 +20,7 @@ module.exports = {
                     LinkProtection: false,
                     MuteRoleID: "",
                 })
-                data.save();
+                await data.save();
             }
 
             const linkProtectionButton = new MessageButton()
@@ -28,8 +28,10 @@ module.exports = {
                 .setLabel('Защита от ссылок')
                 .setStyle('PRIMARY')
 
+            const linkProtectionOptions = [ "Выкл.", "Инвайт ссылки", "Все ссылки" ]
+
             async function generateMessage() {
-                const linkProtection = data.LinkProtection ? "Вкл." : "Выкл.";
+                let linkProtection = linkProtectionOptions[data.LinkProtection];
 
                 const embed = new MessageEmbed()
                     .addField("Защита от ссылок", `\` ${ linkProtection } \``)
@@ -38,31 +40,32 @@ module.exports = {
                 const row = new MessageActionRow()
                     .addComponents(linkProtectionButton)
 
-                const message = {
+                return {
                     embeds: [ embed ],
                     components: [ row ]
-                }
-
-                return message;
+                };
             }
 
 
             let msg = await generateMessage()
-            interaction.followUp(msg);
+            await interaction.followUp(msg);
 
             const filter = c => c.customId === 'linkProtection' && c.member.id === interaction.user.id;
             const collector = interaction.channel.createMessageComponentCollector({ filter });
 
             collector.on('collect', async collected => {
+
                 if (collected.isButton()) {
-                    if (collected.customId == 'linkProtection') {
-                        data.LinkProtection = !data.LinkProtection;
+                    if (collected.customId === 'linkProtection') {
+                        if (data.LinkProtection + 1 < linkProtectionOptions.length) data.LinkProtection++;
+                        else data.LinkProtection = 0;
                         data.save().then(async () => {
                             let m = await generateMessage();
                             await collected.update(m);
                         })
                     }
                 }
+
             })
 
         });
