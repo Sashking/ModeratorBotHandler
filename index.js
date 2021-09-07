@@ -1,3 +1,4 @@
+// Imports
 const { Client, Collection } = require("discord.js");
 
 // Client Initialisation
@@ -7,7 +8,7 @@ module.exports = client;
 // Global Variables
 client.commands = new Collection();
 client.slashCommands = new Collection();
-client.color = (guild) => guild.me.displayHexColor === "000000" ? "FFFFFF" : guild.me.displayHexColor;
+client.color = (guild) => guild.me.displayHexColor === "000000" ? "#ffffff" : guild.me.displayHexColor;
 
 // .env Variables
 require('dotenv').config();
@@ -15,7 +16,7 @@ const token = process.env.TOKEN;
 const mongo = process.env.MONGO;
 
 // Initializing the Project
-require("./util")(client);
+require("./util/index")(client);
 require("./util/mongoose")(mongo);
 
-client.login(token);
+client.login(token).then(() => {});

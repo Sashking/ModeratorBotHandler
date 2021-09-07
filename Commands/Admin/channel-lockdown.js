@@ -1,4 +1,4 @@
-const { CommandInteraction, Client, MessageEmbed, Message } = require('discord.js');
+            const { CommandInteraction, Client, MessageEmbed, Message } = require('discord.js');
 
 module.exports = {
     name: 'channel-lockdown',
