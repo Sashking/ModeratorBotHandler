@@ -28,9 +28,15 @@ module.exports = {
                 .setLabel('Защита от ссылок')
                 .setStyle('PRIMARY')
 
+            const disabledLinkProtectionButton = new MessageButton()
+                .setCustomId('disabledLinkProtection')
+                .setLabel('Защита от ссылок')
+                .setStyle('PRIMARY')
+                .setDisabled(true)
+
             const linkProtectionOptions = [ "Выкл.", "Инвайт ссылки", "Все ссылки" ]
 
-            async function generateMessage() {
+            async function generateMessage(isDisabled) {
                 let linkProtection = linkProtectionOptions[data.LinkProtection];
 
                 const embed = new MessageEmbed()
@@ -38,7 +44,7 @@ module.exports = {
                     .setColor(client.color(interaction.guild))
 
                 const row = new MessageActionRow()
-                    .addComponents(linkProtectionButton)
+                    .addComponents(isDisabled ? disabledLinkProtectionButton : linkProtectionButton)
 
                 return {
                     embeds: [ embed ],
@@ -47,11 +53,16 @@ module.exports = {
             }
 
 
-            let msg = await generateMessage()
-            await interaction.followUp(msg);
+            let msg = await generateMessage(false)
+            const message = await interaction.followUp(msg);
 
             const filter = c => c.customId === 'linkProtection' && c.member.id === interaction.user.id;
             const collector = interaction.channel.createMessageComponentCollector({ filter });
+
+            setTimeout(async () => {
+                message.edit(await (generateMessage(true)));
+                collector.stop();
+            }, 1000 * 60)
 
             collector.on('collect', async collected => {
 
@@ -60,7 +71,7 @@ module.exports = {
                         if (data.LinkProtection + 1 < linkProtectionOptions.length) data.LinkProtection++;
                         else data.LinkProtection = 0;
                         data.save().then(async () => {
-                            let m = await generateMessage();
+                            let m = await generateMessage(false);
                             await collected.update(m);
                         })
                     }

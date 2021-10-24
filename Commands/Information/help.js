@@ -15,13 +15,14 @@ module.exports = {
         const categoryNames = {
             Information: "ℹ Информационные команды",
             Config: "⚙ Настройки",
-            Admin: "🛡 Администраторские команды"
+            AdminUsers: "👥  Управление пользователями",
+            AdminLockdowns: "🛡 Управление каналами",
         }
 
         let categories = [];
-        readdirSync('commands').forEach((dir) => {
+        readdirSync('Commands').forEach((dir) => {
             let commands = [];
-            readdirSync(`commands/${dir}`).forEach((cmd) => {
+            readdirSync(`Commands/${dir}`).forEach((cmd) => {
                 const cmdName = cmd.toString().replace(".js", "");
                 commands.push(`**\` ${cmdName} \`**`);
             })
